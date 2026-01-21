@@ -45,4 +45,5 @@ int main() {
     forn (tc, tt) {
         go();
     }
+    return 0;
 }
