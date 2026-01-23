@@ -37,7 +37,7 @@ void go() {
         }
         lst[pf[i + 1]] = i + 1;
     }
-    cout << -1 << endl;
+    assert(false);
 
 }
 
