@@ -13,37 +13,40 @@ int sz(const T &a) {
     return int(a.size());
 }
 
-struct Edge{
-    int u;
-    int v;
-};
-
 const int MAX = 1e5 + 5;
 const int inf = 2e9;
 
 vector<vector<int>> adj(MAX);
 vector<int> low(MAX, inf);
-vector<int> dis(MAX, -1);
-vector<int> p(MAX, 0);
-vector<Edge> res;
+vector<int> tin(MAX, 0);
+vector<int> art(MAX, 0);
+int timer;
+vector<int> res;
 
-void dfs(int u) {
+void dfs(int u, int p) {
+    tin[u] = low[u] = timer++;
+    int children = 0;
+
     for (auto v : adj[u]) {
-        if (v == p[u]) continue; 
-        if (dis[v] == -1) {
-            dis[v] = dis[u] + 1;
-            low[v] = min(low[v], dis[v]);
-            p[v] = u;
-            dfs(v);
-        }
-        low[u] = min(low[u], low[v]);
-        if ( dis[v] > dis[u] && low[v] >= dis[v] ) {
-            // cout << "u: " << u << " " << dis[u] << " " << low[u] << endl; 
-            // cout << "v: " << v << " " << dis[v] << " " << low[v] << endl; 
-            res.push_back({u, v});
+        if (v == p) continue;
+
+        if (tin[v]) {
+            low[u] = min(low[u], tin[v]);
+        } else {
+            dfs(v, u);
+            low[u] = min(low[u], low[v]);
+
+            if (p != 0 && low[v] >= tin[u]) {
+                art[u] = 1;
+            }
+            children++;
         }
     }
 
+    if (p == 0 && children > 1) {
+        art[u] = 1;
+    }
+    
 }
 
 void go() {
@@ -56,20 +59,26 @@ void go() {
         adj[u].push_back(v);
         adj[v].push_back(u);
     }
+    
+    timer = 1;
 
-    dis[1] = 0;
-    low[1] = 0;
-    p[1] = 0;
-    dfs(1);
-
-    cout << sz(res) << endl;
-    for (auto e : res) {
-        cout << e.u << " " << e.v << endl;
+    forsn (i, 1, n + 1) {
+        if (!tin[i]) {
+            dfs(i, 0);
+        }
     }
 
-    // forn(i, n) {
-    //     cout << "i : " << i + 1 << " " << dis[i + 1] << " " << low[i + 1] << endl;
-    // }
+    forsn (i, 1, n + 1) {
+        if (art[i]) {
+            res.push_back(i);
+        }
+    }
+
+    cout << sz(res) << "\n";
+    forn(i, sz(res)) {
+        cout << res[i]<< " \n"[i + 1 == sz(res)];
+    }
+    
 
 }
 
