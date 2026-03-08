@@ -13,33 +13,56 @@ int sz(const T &a) {
     return int(a.size());
 }
 
+const int MAX = 1e4 + 5;
 struct Edge{
     int u;
     int v;
     int ind;
 };
 
-const int MAX = 1e4 + 5;
 vector<vector<Edge>> adj(MAX);
-vector<Edge> Edges;
-set<int> bads;
-vector<int> col(MAX, 0);
+vector<Edge> edges;
+vector<int> dis(MAX);
+vector<int> col(MAX);
+vector<int> pa(MAX);
 
-void dfs(int u,int p) {
-    for (auto cur : adj[u]) {
-        int v = cur.v;
-        int ind = cur.ind;
-        if (v == p) {
-            continue;
-        }
-        if (col[v] != 0) {
-            if ( col[u] == col[v] ) {
-                bads.insert(ind);
+vector<int> odd(MAX, 0);
+vector<int> even(MAX, 0);
+
+vector<int> even_cnt(MAX, 0);
+vector<int> odd_cnt(MAX, 0);
+
+vector<int> track;
+
+vector<int> all_back;
+set<int> back_odd;
+set<int> tree;
+
+void dfs(int u, int p) {
+    track.push_back(u);
+    for (auto edge : adj[u]) {
+        int v = edge.v;
+        int ind = edge.ind;
+        if (v == p) continue;
+        if (dis[v]) {
+            if (dis[v] < dis[u]) {
+                if (col[v] == col[u]) {
+                    odd[u]++;
+                    odd[v]--;
+                    back_odd.insert(ind);
+                    all_back.push_back(ind);
+                } else {
+                    even[u]++;
+                    even[v]--;
+                }
             }
-            continue;
+        } else {
+            dis[v] = dis[u] + 1;
+            col[v] = dis[v] % 2;
+            tree.insert(ind);
+            pa[v] = ind;
+            dfs(v, u);
         }
-        col[v] = 3 - col[u];
-        dfs(v, u);
     }
 }
 
@@ -53,35 +76,58 @@ void go() {
         cin >> u >> v;
         adj[u].push_back({u, v, i});
         adj[v].push_back({v, u, i});
-        Edges.push_back({u, v, i});
+        edges.push_back({u, v, i});
     }
 
-    col[1] = 1;
-    dfs(1, 0);
-
-    // cout << " ------ " << "\n";
-    // for (auto e : bads) {
-    //     cout << e << "\n";
-    // }
-    // cout << " ------ " << "\n";
-
-    if (sz(bads) > 1) {
-        cout << 0 << "\n";
-        return;
+    int comp = 0;
+    int total_back = 0;
+    forsn(i, 1, n + 1) {
+        if (dis[i]) continue;
+        col[i] = dis[i] = 1;
+        pa[i] = -1;
+        back_odd.clear();
+        dfs(i, 0);
+        while (sz(track)) {
+            int u = track.back();
+            track.pop_back();
+            if (pa[u] == -1) continue;
+            int v = edges[pa[u]].u == u ? edges[pa[u]].v : edges[pa[u]].u;
+            int ind = edges[pa[u]].ind;
+            even_cnt[ind] += even[u];
+            odd_cnt[ind] += odd[u];
+            odd[v] += odd[u];
+            even[v] += even[u];
+        }
+        if (sz(back_odd)) {
+            comp++;
+        }
+        total_back += sz(back_odd);
     }
 
-    if (sz(bads) == 1) {
-        cout << 1 << "\n";
-        cout << (*bads.begin()) + 1 << "\n";
-        return;
+    vector<int> ans;
+
+    if (comp == 0 ){
+        forn(i, m) ans.push_back(i + 1);
+    } else if (comp == 1) {
+        if (total_back == 1) {
+            ans.push_back(all_back[0] + 1);
+        }
+        forn(i, m) {
+            if (odd_cnt[i] == total_back && even_cnt[i] == 0) {
+                ans.push_back(i + 1);
+            } 
+        }
     }
 
-    cout << m << "\n";
-    forn (i, m) {
-        cout << i + 1 << " ";
-    }
-    cout << "\n";
+    sort(all(ans));
 
+    cout << sz(ans) << endl;
+    for (auto e : ans) {
+        cout << e << " ";
+    }
+    
+    cout << endl;
+    
 }
 
 int main() {
