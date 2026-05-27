@@ -2,7 +2,9 @@
 using namespace std;
 typedef long long ll;
 #define forn(i, n) for (int i = 0; i < int(n); i++)
+#define dforn(i, n) for (int i = int(n) - 1; i >= 0; i--)
 #define forsn(i, s, n) for (int i = int(s); i < int(n); i++)
+#define dforsn(i, s, n) for (int i = int(n) - 1; i >= int(s); i--)
 #define all(x) x.begin(), x.end()
 #define ff first
 #define ss second
@@ -18,60 +20,36 @@ const int ninf = -1e9;
 const ll linf = 1e18;
 const ll nlinf = -1e18;
 
-int A[MAX];
-struct node{
-    ll sf = 0;
-    ll sum = 0;
-    node operator + (const node &o) const {
-        node res;
-
-        res.sum = sum + o.sum;
-        res.sf = max(o.sf, o.sum + sf);
-
-        return res;
-    }
-};
-
-const node nul = node{nlinf, 0};
-
-node st[4 * MAX];
-
-void build(int it, int l, int r) {
-    if (l == r) {
-        st[it].sf = A[l];
-        st[it].sum = A[l];
-        return;
-    }
-    int m = (l + r) / 2;
-    build(2 * it, l, m);
-    build(2 * it + 1, m + 1, r);
-    st[it] = st[2 * it] + st[2 * it + 1];
-} 
-
-node query(int it, int l, int r, int a, int b) {
-    if (l > b || r < a) return nul;
-    if (l >= a && r <= b) return st[it];
-    int m = (l + r) / 2;
-    return query(2 * it, l, m, a, b) + query(2 * it + 1, m + 1, r, a, b);
-}
+ll A[MAX], B[MAX];
 
 void go() {
-
+    
     int n, a, b;
     cin >> n >> a >> b; 
-
+    
     forn (i, n) {
         cin >> A[i + 1];
     }
-
-    build(1, 1, n);
-
+    
+    forn (i, n) {
+        B[i + 1] = B[i] + A[i + 1];
+    }
+    
     ll ans = nlinf;
-
+    
+    deque<ll> dq;
+    dq.push_back(0);
+        
     forsn (i, a, n + 1) {
-        node cur = query(1, 1, n, i - a + 1, i);
-        node prev = b > a ? query(1, 1, n, max(1, i - b + 1), i - a) : nul;
-        ans = max({ans, cur.sum, prev.sf + cur.sum});
+        ll l = max(0, i - b), r = i - a;
+        while (!dq.empty() && B[dq.back()] >= B[r]) {
+            dq.pop_back();
+        }
+        dq.push_back(r);
+        while (!dq.empty() && dq.front() < l) {
+            dq.pop_front(); 
+        }
+        ans = max(ans, B[i] - B[dq.front()]);
     }
 
     cout << ans << endl;
